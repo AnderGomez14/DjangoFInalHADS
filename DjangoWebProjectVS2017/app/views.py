@@ -99,10 +99,9 @@ def detail(request, question_id):
      question = get_object_or_404(Question, pk=question_id)
      return render(request, 'polls/detail.html', {'title':'Respuestas asociadas a la pregunta:','question': question})
 
-def results(request, question_id, choice_id):
+def results(request, question_id):
     question = get_object_or_404(Question, pk=question_id)
-    choice = get_object_or_404(Choice, pk=choice_id)
-    return render(request, 'polls/results.html', {'title':'Resultados de la pregunta:','question': question, 'correct': choice.correct})
+    return render(request, 'polls/results.html', {'title':'Resultados de la pregunta:','question': question, })
 
 def vote(request, question_id):
     p = get_object_or_404(Question, pk=question_id)

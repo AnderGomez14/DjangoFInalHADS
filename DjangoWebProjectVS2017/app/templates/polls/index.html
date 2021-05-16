@@ -28,7 +28,7 @@
                 <select name="subject" id="subject">
                     <option value="NoFiltrar">Ninguna categoria</option>
                 {% for subject in subjects %}
-                    <option value="{{ subject }}">{{ subject }}</option>
+                    <option value="{{ subject | escape }}">{{ subject | escape }}</option>
                 {% endfor %}
                 </select>
 
@@ -36,7 +36,7 @@
     </form> 
     <ul>
     {% for question in latest_question_list %}
-        <li><a href="{% url 'detail' question.id %}">{{ question.question_text }}</a></li>
+        <li><a href="{% url 'detail' question.id %}">{{ question.question_text | escape }}</a></li>
     {% endfor %}
     </ul>
   

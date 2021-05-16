@@ -163,7 +163,8 @@
 {% else %}
 <p id="incorrect" hidden><strong style="        color: red;"><b>Respuesta incorrecta :(</b></strong></p>
 <p id="error" hidden><strong style="        color: red;"><b>No has seleccionado una respuesta</b></strong></p>
-<p id="correct" hidden><strong style="        color: green;"><b>Respuesta correcta :(</b></strong></p>
+<p id="correct" hidden><strong style="        color: green;"><b>Respuesta correcta :(</b></strong></p><br />
+<a id="results" hidden href="{% url 'results' question.id %}">Ver resultado de la votacion</> </a>
     <script>
     function comprobarResultado() {
         $("#error").hide();
@@ -179,6 +180,7 @@
                     "choice": document.querySelector('input[name="choice"]:checked').value, "question_id": $('input[name$="question_id"]').val(), "csrfmiddlewaretoken": $('input[name$="csrfmiddlewaretoken"]').val(),
                 },
                 success: function (data) {
+                    $("#results").show();
                     switch (data.codigo) {
                         case -1:
                             $("#error").toggle();
