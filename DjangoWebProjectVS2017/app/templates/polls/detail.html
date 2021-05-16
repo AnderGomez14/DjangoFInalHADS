@@ -163,13 +163,15 @@
 {% else %}
 <p id="incorrect" hidden><strong style="        color: red;"><b>Respuesta incorrecta :(</b></strong></p>
 <p id="error" hidden><strong style="        color: red;"><b>No has seleccionado una respuesta</b></strong></p>
-<p id="correct" hidden><strong style="        color: green;"><b>Respuesta correcta :(</b></strong></p><br />
+<p id="correct" hidden><strong style="        color: green;"><b>Respuesta correcta :)</b></strong></p><br />
 <a id="results" hidden href="{% url 'results' question.id %}">Ver resultado de la votacion</> </a>
     <script>
+    var upload = false;
     function comprobarResultado() {
         $("#error").hide();
         $("#incorrect").hide();
         $("#correct").hide();
+        $("#reg").hide();
         try {
             $.ajax({
                 url: "/api/procesarVoto",
@@ -190,6 +192,8 @@
                             break;
                         case 1:
                             $("#correct").toggle();
+                            $("#reg").toggle();
+                            upload = true;
                             break;
                         default:
                             break;
@@ -198,6 +202,31 @@
             });
         } catch {
             $("#error").toggle();
+        }
+        return false;
+    }
+    function subirResultado() {
+        if (upload) {
+            try {
+                $.ajax({
+                    url: "/api/procesarRanking",
+                    type: "POST",
+                    dataType: "json",
+                    timeout: 15000,
+                    data: {
+                        "name": $('input[name$="nombre"]').val(), "csrfmiddlewaretoken": $('input[name$="csrfmiddlewaretoken"]').val(),
+                    },
+                    success: function (data) {
+                        alert("Resultado guardado");
+                        upload = false;
+                    },
+                });
+            } catch {
+                alert("Algo ha ido mal.")
+            }
+        }
+        else {
+            alert("Ya has registrado el acierto.")
         }
         return false;
     }
@@ -210,6 +239,12 @@
     {% endfor %}
         <input type="hidden" hidden name="question_id" value="{{question.id}}" />
         <input type="submit" value="Vote" />
-        </form>
+    </form><br />
+    <form hidden id="reg" onsubmit="return subirResultado()" method="post">
+        <h5>Si quieres registrar tu acierto en el ranking introduce tu nombre:</h5>
+        <label for="nombre">Nombre: </label><br />
+        <input type="text" name="nombre" id="nombre" value="" />
+        <input type="submit" value="Registrar acierto" />
+    </form>
 {% endif %}
 {% endblock %}

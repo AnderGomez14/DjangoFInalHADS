@@ -3,12 +3,12 @@ Definition of views.
 """
 
 from django.shortcuts import render,get_object_or_404
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponseNotFound
 from django.template import RequestContext
 from datetime import datetime
 from django.http.response import HttpResponse, Http404
 from django.http import HttpResponseRedirect, HttpResponse
-from .models import Question,Choice,User
+from .models import Question,Choice,User,Ranking
 from django.template import loader
 from django.core.urlresolvers import reverse
 from app.forms import QuestionForm, ChoiceForm,UserForm
@@ -25,7 +25,8 @@ def home(request):
         'app/index.html',
         {
             'title':'Home Page',
-            'year':datetime.now().year  
+            'year':datetime.now().year,
+            'ranking' : Ranking.objects.order_by("-score")[:10]
       })
 
 def contact(request):
@@ -52,11 +53,11 @@ def about(request):
 
 def index(request):
         latest_question_list = Question.objects.order_by('-pub_date')
-        subjects = []
-        for question in latest_question_list:
-            if question.subject not in subjects:
-                subjects.append(question.subject)
         if request.user.is_authenticated:
+            subjects = []
+            for question in latest_question_list:
+                if question.subject not in subjects:
+                    subjects.append(question.subject)
             if request.method == "POST":
                     subject_selected = request.POST.get("subject","0")
                     if(subject_selected != "NoFiltrar"):
@@ -67,6 +68,11 @@ def index(request):
                         'subjects' : subjects
                       }
         else:
+            subjects = []
+            for question in latest_question_list:
+                contador = Choice.objects.filter(question_id = question.id).count()
+                if question.subject not in subjects and (contador == 4 or (contador > 1 and Choice.objects.filter(question_id = question.id, correct=1).count() == 1)):
+                    subjects.append(question.subject)
             if request.method == "POST":
                 subject_selected = request.POST.get("subject","0")
                 if(subject_selected != "NoFiltrar"):
@@ -209,6 +215,16 @@ def users_detail(request):
               }
     return render(request, 'polls/users.html', context)
 
+def api(request,action):
+    if(action == 'procesarVoto'):
+       return procesarVoto(request)
+    elif(action == 'procesarFiltro'):
+       return procesarFiltro(request)
+    elif(action == 'procesarRanking'):
+       return procesarRanking(request)
+    else:
+        return HttpResponseNotFound("API Incorrecta")  
+
 def procesarVoto(request):
     p = get_object_or_404(Question, pk=request.POST['question_id'])
     try:
@@ -230,11 +246,11 @@ def procesarVoto(request):
 
 def procesarFiltro(request):
         latest_question_list = Question.objects.order_by('-pub_date')
-        subjects = []
-        for question in latest_question_list:
-            if question.subject not in subjects:
-                subjects.append(question.subject)
         if request.user.is_authenticated:
+            subjects = []
+            for question in latest_question_list:
+                if question.subject not in subjects:
+                    subjects.append(question.subject)
             if request.method == "POST":
                     subject_selected = request.POST.get("subject","0")
                     if(subject_selected != "NoFiltrar"):
@@ -245,6 +261,11 @@ def procesarFiltro(request):
                         'subjects' : subjects
                       }
         else:
+            subjects = []
+            for question in latest_question_list:
+                contador = Choice.objects.filter(question_id = question.id).count()
+                if question.subject not in subjects and (contador == 4 or (contador > 1 and Choice.objects.filter(question_id = question.id, correct=1).count() == 1)):
+                    subjects.append(question.subject)
             if request.method == "POST":
                 subject_selected = request.POST.get("subject","0")
                 if(subject_selected != "NoFiltrar"):
@@ -272,3 +293,13 @@ def procesarFiltro(request):
                       }
         template = loader.get_template('polls/preguntasAJAX.html')
         return render(request, 'polls/preguntasAJAX.html', context)
+
+def procesarRanking(request):
+    name = Ranking.objects.filter(nombre = request.POST.get("name","0")).first()
+    if (name):
+        name.score+=1
+    else:
+        name = Ranking()
+        name.nombre = request.POST.get("name","0")
+    name.save()
+    return JsonResponse({}) #Devolvemos una respuesta vacia para indicarle al AJAX de que la peticion ha sido correcta

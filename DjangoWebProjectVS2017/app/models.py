@@ -20,3 +20,7 @@ class Choice(models.Model):
 class User(models.Model):
     email = models.CharField(max_length=200)
     nombre = models.CharField(max_length=200)
+
+class Ranking(models.Model):
+    nombre = models.CharField(max_length=200,primary_key=True)
+    score = models.IntegerField(default=1)
